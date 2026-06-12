@@ -1,4 +1,6 @@
+using Application.Interfaces.V1;
 using Infrastructure.Persistence;
+using Infrastructure.Services.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,8 @@ public static class InfrastructureDependencyInjection
 
         services.AddDbContext<GatewayDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        services.AddScoped<IOrderGatewayService, OrderGatewayService>();
 
         return services;
     }

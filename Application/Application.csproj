@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\..\AraseTraderOrderService\Contracts\Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
