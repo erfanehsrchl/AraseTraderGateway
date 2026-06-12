@@ -1,4 +1,6 @@
 using Application.Interfaces.V1;
+using Infrastructure.BackgroundJobs;
+using Infrastructure.Messaging;
 using Infrastructure.Persistence;
 using Infrastructure.Services.V1;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +21,10 @@ public static class InfrastructureDependencyInjection
         services.AddDbContext<GatewayDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
         services.AddScoped<IOrderGatewayService, OrderGatewayService>();
+        services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
+        services.AddHostedService<OutboxPublisherBackgroundService>();
 
         return services;
     }
