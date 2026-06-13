@@ -1,34 +1,27 @@
 using Application.Interfaces.V1;
 using Contracts.Grpc.Models;
 using Contracts.Grpc.Wallet;
-using Grpc.Net.Client;
-using Infrastructure.Grpc;
-using Microsoft.Extensions.Options;
-using ProtoBuf.Grpc.Client;
 
 namespace Infrastructure.Services.V1;
 
 /// <summary>
-/// Implements wallet read operations by creating protobuf-net.Grpc clients for the OrderService wallet
-/// contract, keeping controllers independent from direct gRPC infrastructure concerns.
+/// Implements wallet read operations using the OrderService protobuf-net.Grpc client supplied by dependency
+/// injection, keeping controllers independent from direct gRPC infrastructure concerns.
 /// </summary>
 public class WalletGatewayService : IWalletGatewayService
 {
-    private readonly OrderServiceGrpcOptions _orderServiceGrpcOptions;
+    private readonly IWalletGrpcService _walletGrpcService;
 
-    public WalletGatewayService(IOptions<OrderServiceGrpcOptions> orderServiceGrpcOptions)
+    public WalletGatewayService(IWalletGrpcService walletGrpcService)
     {
-        _orderServiceGrpcOptions = orderServiceGrpcOptions.Value;
+        _walletGrpcService = walletGrpcService;
     }
 
     public async Task<GetWalletByCustomerIdGrpcResponse> GetWalletByCustomerIdAsync(
         long customerId,
         CancellationToken cancellationToken)
     {
-        using var channel = GrpcChannel.ForAddress(_orderServiceGrpcOptions.GrpcAddress);
-        var client = channel.CreateGrpcService<IWalletGrpcService>();
-
-        return await client.GetWalletByCustomerIdAsync(
+        return await _walletGrpcService.GetWalletByCustomerIdAsync(
             new GetWalletByCustomerIdGrpcRequest
             {
                 CustomerId = customerId
@@ -40,10 +33,7 @@ public class WalletGatewayService : IWalletGatewayService
         long walletId,
         CancellationToken cancellationToken)
     {
-        using var channel = GrpcChannel.ForAddress(_orderServiceGrpcOptions.GrpcAddress);
-        var client = channel.CreateGrpcService<IWalletGrpcService>();
-
-        return await client.GetWalletTransactionsByWalletIdAsync(
+        return await _walletGrpcService.GetWalletTransactionsByWalletIdAsync(
             new GetWalletTransactionsByWalletIdGrpcRequest
             {
                 WalletId = walletId

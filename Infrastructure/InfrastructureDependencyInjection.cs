@@ -1,4 +1,5 @@
 using Application.Interfaces.V1;
+using Contracts.Grpc.Wallet;
 using Infrastructure.BackgroundJobs;
 using Infrastructure.Grpc;
 using Infrastructure.Messaging;
@@ -7,6 +8,7 @@ using Infrastructure.Services.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProtoBuf.Grpc.ClientFactory;
 
 namespace Infrastructure;
 
@@ -28,6 +30,14 @@ public static class InfrastructureDependencyInjection
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
         services.Configure<OrderServiceGrpcOptions>(configuration.GetSection("OrderService"));
+        services.AddCodeFirstGrpcClient<IWalletGrpcService>(options =>
+        {
+            var grpcAddress = configuration.GetValue<string>("OrderService:GrpcAddress")
+                ?? throw new InvalidOperationException("OrderService gRPC address was not found.");
+
+            options.Address = new Uri(grpcAddress);
+        });
+
         services.AddScoped<IOrderGatewayService, OrderGatewayService>();
         services.AddScoped<IWalletGatewayService, WalletGatewayService>();
         services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
