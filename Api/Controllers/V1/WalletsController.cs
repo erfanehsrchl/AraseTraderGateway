@@ -1,7 +1,8 @@
 using Api.UriConstants.V1;
+using Api.ViewModels.V1;
 using Application.Interfaces.V1;
 using Asp.Versioning;
-using Contracts.Grpc.Models;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.V1;
@@ -26,7 +27,7 @@ public class WalletsController : ControllerBase
     /// Retrieves a customer's wallet through the Gateway by delegating to the OrderService wallet gRPC API.
     /// </summary>
     [HttpGet(WalletsUriConstants.GetByCustomerId)]
-    public async Task<ActionResult<GetWalletByCustomerIdGrpcResponse>> GetWalletByCustomerId(
+    public async Task<ActionResult<GetWalletByCustomerIdOutVm>> GetWalletByCustomerId(
         long customerId,
         CancellationToken cancellationToken)
     {
@@ -37,14 +38,14 @@ public class WalletsController : ControllerBase
 
         var result = await _walletGatewayService.GetWalletByCustomerIdAsync(customerId, cancellationToken);
 
-        return Ok(result);
+        return Ok(result.Adapt<GetWalletByCustomerIdOutVm>());
     }
 
     /// <summary>
     /// Retrieves wallet transaction history through the Gateway by delegating to the OrderService wallet gRPC API.
     /// </summary>
     [HttpGet(WalletsUriConstants.GetTransactionsByWalletId)]
-    public async Task<ActionResult<GetWalletTransactionsByWalletIdGrpcResponse>> GetWalletTransactionsByWalletId(
+    public async Task<ActionResult<GetWalletTransactionsByWalletIdOutVm>> GetWalletTransactionsByWalletId(
         long walletId,
         CancellationToken cancellationToken)
     {
@@ -55,6 +56,6 @@ public class WalletsController : ControllerBase
 
         var result = await _walletGatewayService.GetWalletTransactionsByWalletIdAsync(walletId, cancellationToken);
 
-        return Ok(result);
+        return Ok(result.Adapt<GetWalletTransactionsByWalletIdOutVm>());
     }
 }

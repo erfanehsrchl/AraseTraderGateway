@@ -17,11 +17,33 @@ namespace Api.Controllers.V1;
 [Route(OrdersUriConstants.Route)]
 public class OrdersController : ControllerBase
 {
+    private readonly IOrderGrpcGatewayService _orderGrpcGatewayService;
     private readonly IOrderGatewayService _orderGatewayService;
 
-    public OrdersController(IOrderGatewayService orderGatewayService)
+    public OrdersController(
+        IOrderGatewayService orderGatewayService,
+        IOrderGrpcGatewayService orderGrpcGatewayService)
     {
         _orderGatewayService = orderGatewayService;
+        _orderGrpcGatewayService = orderGrpcGatewayService;
+    }
+
+    /// <summary>
+    /// Retrieves an order through the Gateway by delegating the query to the OrderService order gRPC API.
+    /// </summary>
+    [HttpGet(OrdersUriConstants.GetByTrackingId)]
+    public async Task<ActionResult<GetOrderByTrackingIdOutVm>> GetOrderByTrackingId(
+        Guid trackingId,
+        CancellationToken cancellationToken)
+    {
+        if (trackingId == Guid.Empty)
+        {
+            return BadRequest("trackingId must not be empty.");
+        }
+
+        var result = await _orderGrpcGatewayService.GetOrderByTrackingIdAsync(trackingId, cancellationToken);
+
+        return Ok(result.Adapt<GetOrderByTrackingIdOutVm>());
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Application.Interfaces.V1;
+using Contracts.Grpc.Order;
 using Contracts.Grpc.Wallet;
 using Infrastructure.BackgroundJobs;
 using Infrastructure.Grpc;
@@ -30,15 +31,20 @@ public static class InfrastructureDependencyInjection
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
         services.Configure<OrderServiceGrpcOptions>(configuration.GetSection("OrderService"));
+        var orderServiceGrpcAddress = configuration.GetValue<string>("OrderService:GrpcAddress")
+            ?? throw new InvalidOperationException("OrderService gRPC address was not found.");
+
         services.AddCodeFirstGrpcClient<IWalletGrpcService>(options =>
         {
-            var grpcAddress = configuration.GetValue<string>("OrderService:GrpcAddress")
-                ?? throw new InvalidOperationException("OrderService gRPC address was not found.");
-
-            options.Address = new Uri(grpcAddress);
+            options.Address = new Uri(orderServiceGrpcAddress);
+        });
+        services.AddCodeFirstGrpcClient<IOrderGrpcService>(options =>
+        {
+            options.Address = new Uri(orderServiceGrpcAddress);
         });
 
         services.AddScoped<IOrderGatewayService, OrderGatewayService>();
+        services.AddScoped<IOrderGrpcGatewayService, OrderGrpcGatewayService>();
         services.AddScoped<IWalletGatewayService, WalletGatewayService>();
         services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
         services.AddHostedService<OutboxPublisherBackgroundService>();
