@@ -1,5 +1,9 @@
 namespace Infrastructure.Messaging;
 
+/// <summary>
+/// Holds RabbitMQ broker and routing settings used by the Gateway outbox publisher for integration event
+/// delivery.
+/// </summary>
 public class RabbitMqOptions
 {
     public string HostName { get; set; } = string.Empty;

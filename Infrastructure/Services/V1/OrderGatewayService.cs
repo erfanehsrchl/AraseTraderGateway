@@ -9,6 +9,10 @@ using Infrastructure.Persistence;
 
 namespace Infrastructure.Services.V1;
 
+/// <summary>
+/// Implements the order intake use case for the Gateway by creating a tracking identifier and storing a
+/// CreateOrder integration event in the outbox for later RabbitMQ delivery.
+/// </summary>
 public class OrderGatewayService : IOrderGatewayService
 {
     private readonly GatewayDbContext _dbContext;

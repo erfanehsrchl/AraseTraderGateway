@@ -5,6 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.BackgroundJobs;
 
+/// <summary>
+/// Hosted background worker that periodically invokes the outbox publisher so pending integration events
+/// are delivered to RabbitMQ without blocking request processing.
+/// </summary>
 public class OutboxPublisherBackgroundService : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(5);

@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure;
 
+/// <summary>
+/// Registers Infrastructure services that connect the Gateway to persistence, RabbitMQ publishing,
+/// background processing, and OrderService gRPC communication.
+/// </summary>
 public static class InfrastructureDependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(

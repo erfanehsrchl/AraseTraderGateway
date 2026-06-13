@@ -10,6 +10,10 @@ using RabbitMQ.Client;
 
 namespace Infrastructure.Services.V1;
 
+/// <summary>
+/// Publishes pending Gateway outbox messages to RabbitMQ and updates delivery state for successful,
+/// retriable, and failed publishing attempts.
+/// </summary>
 public class OutboxPublisherService : IOutboxPublisherService
 {
     private const int BatchSize = 100;

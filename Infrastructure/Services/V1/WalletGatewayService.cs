@@ -8,6 +8,10 @@ using ProtoBuf.Grpc.Client;
 
 namespace Infrastructure.Services.V1;
 
+/// <summary>
+/// Implements wallet read operations by creating protobuf-net.Grpc clients for the OrderService wallet
+/// contract, keeping controllers independent from direct gRPC infrastructure concerns.
+/// </summary>
 public class WalletGatewayService : IWalletGatewayService
 {
     private readonly OrderServiceGrpcOptions _orderServiceGrpcOptions;

@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
+/// <summary>
+/// EF Core persistence context for the Gateway, including the durable outbox storage used for reliable
+/// integration event delivery.
+/// </summary>
 public class GatewayDbContext : DbContext
 {
     public GatewayDbContext(DbContextOptions<GatewayDbContext> options)
