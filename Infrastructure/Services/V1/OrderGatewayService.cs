@@ -30,7 +30,7 @@ public class OrderGatewayService : IOrderGatewayService
         AddOrderInDto input,
         CancellationToken cancellationToken)
     {
-        var existingOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, cancellationToken);
+        var existingOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, nameof(CreateOrderEvent), cancellationToken);
 
         if (existingOutboxMessage is not null)
         {
@@ -70,7 +70,7 @@ public class OrderGatewayService : IOrderGatewayService
         {
             _dbContext.Entry(outboxMessage).State = EntityState.Detached;
 
-            var persistedOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, cancellationToken);
+            var persistedOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, nameof(CreateOrderEvent), cancellationToken);
 
             if (persistedOutboxMessage is null)
             {
@@ -88,12 +88,15 @@ public class OrderGatewayService : IOrderGatewayService
 
     private async Task<OutboxMessage?> GetExistingOutboxMessageAsync(
         string idempotencyKey,
+        string messageType,
         CancellationToken cancellationToken)
     {
         return await _dbContext.OutboxMessages
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                outboxMessage => outboxMessage.IdempotencyKey == idempotencyKey,
+                x =>
+                    x.IdempotencyKey == idempotencyKey &&
+                    x.MessageType == messageType,
                 cancellationToken);
     }
 
