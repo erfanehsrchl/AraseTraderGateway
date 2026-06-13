@@ -22,6 +22,9 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
         builder.Property(outboxMessage => outboxMessage.Payload)
             .IsRequired();
 
+        builder.Property(outboxMessage => outboxMessage.IdempotencyKey)
+            .HasMaxLength(100);
+
         builder.Property(outboxMessage => outboxMessage.Status)
             .IsRequired();
 
@@ -38,6 +41,10 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
         builder.Property(outboxMessage => outboxMessage.PublishedAt);
 
         builder.HasIndex(outboxMessage => outboxMessage.MessageId);
+
+        builder.HasIndex(outboxMessage => outboxMessage.IdempotencyKey)
+            .IsUnique()
+            .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
         builder.HasIndex(outboxMessage => new
         {

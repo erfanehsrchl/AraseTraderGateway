@@ -6,6 +6,8 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Extensions;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Infrastructure.Services.V1;
 
@@ -15,6 +17,8 @@ namespace Infrastructure.Services.V1;
 /// </summary>
 public class OrderGatewayService : IOrderGatewayService
 {
+    private const string UniqueViolationSqlState = "23505";
+
     private readonly GatewayDbContext _dbContext;
 
     public OrderGatewayService(GatewayDbContext dbContext)
@@ -26,6 +30,13 @@ public class OrderGatewayService : IOrderGatewayService
         AddOrderInDto input,
         CancellationToken cancellationToken)
     {
+        var existingOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, cancellationToken);
+
+        if (existingOutboxMessage is not null)
+        {
+            return CreateOutputFromExistingMessage(existingOutboxMessage);
+        }
+
         var trackingId = Guid.Empty.CreateVersion7();
         var now = DateTime.UtcNow;
 
@@ -40,6 +51,7 @@ public class OrderGatewayService : IOrderGatewayService
 
         var outboxMessage = new OutboxMessage
         {
+            IdempotencyKey = input.IdempotencyKey,
             MessageId = Guid.Empty.CreateVersion7(),
             MessageType = nameof(CreateOrderEvent),
             Payload = JsonSerializer.Serialize(createOrderEvent),
@@ -49,11 +61,57 @@ public class OrderGatewayService : IOrderGatewayService
         };
 
         _dbContext.OutboxMessages.Add(outboxMessage);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyKeyUniqueViolation(exception))
+        {
+            _dbContext.Entry(outboxMessage).State = EntityState.Detached;
+
+            var persistedOutboxMessage = await GetExistingOutboxMessageAsync(input.IdempotencyKey, cancellationToken);
+
+            if (persistedOutboxMessage is null)
+            {
+                throw;
+            }
+
+            return CreateOutputFromExistingMessage(persistedOutboxMessage);
+        }
 
         return new AddOrderOutDto
         {
             TrackingId = trackingId
         };
+    }
+
+    private async Task<OutboxMessage?> GetExistingOutboxMessageAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.OutboxMessages
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                outboxMessage => outboxMessage.IdempotencyKey == idempotencyKey,
+                cancellationToken);
+    }
+
+    private static AddOrderOutDto CreateOutputFromExistingMessage(OutboxMessage outboxMessage)
+    {
+        var createOrderEvent = JsonSerializer.Deserialize<CreateOrderEvent>(outboxMessage.Payload)
+            ?? throw new InvalidOperationException("Outbox message payload could not be deserialized.");
+
+        return new AddOrderOutDto
+        {
+            TrackingId = createOrderEvent.TrackingId
+        };
+    }
+
+    private static bool IsIdempotencyKeyUniqueViolation(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException postgresException
+            && postgresException.SqlState == UniqueViolationSqlState
+            && postgresException.ConstraintName == "IX_OutboxMessages_IdempotencyKey";
     }
 }

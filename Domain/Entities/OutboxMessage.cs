@@ -17,6 +17,8 @@ public class OutboxMessage
 
     public string Payload { get; set; } = string.Empty;
 
+    public string? IdempotencyKey { get; set; }
+
     public OutboxMessageStatus Status { get; set; }
 
     public int RetryCount { get; set; }

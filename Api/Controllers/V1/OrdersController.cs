@@ -31,9 +31,16 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AddOrderOutVm>> AddOrder(
         AddOrderInVm request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return BadRequest("Idempotency-Key header is required.");
+        }
+
         var input = request.Adapt<AddOrderInDto>();
+        input.IdempotencyKey = idempotencyKey;
         var result = await _orderGatewayService.AddOrderAsync(input, cancellationToken);
 
         return Ok(result.Adapt<AddOrderOutVm>());
