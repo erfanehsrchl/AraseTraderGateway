@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
+# Build context should include both AraseTraderGateway and the referenced Contracts project.
 COPY ["AraseTraderGateway/AraseTraderGateway.sln", "AraseTraderGateway/"]
 COPY ["AraseTraderGateway/Api/Api.csproj", "AraseTraderGateway/Api/"]
 COPY ["AraseTraderGateway/Application/Application.csproj", "AraseTraderGateway/Application/"]
@@ -11,7 +12,7 @@ COPY ["AraseTraderOrderService/Contracts/Contracts.csproj", "AraseTraderOrderSer
 COPY ["AraseTraderGateway/NuGet.Config", "AraseTraderGateway/"]
 
 WORKDIR /src/AraseTraderGateway
-RUN dotnet restore "Api/Api.csproj"
+RUN dotnet restore "AraseTraderGateway.sln"
 
 WORKDIR /src
 COPY ["AraseTraderGateway/", "AraseTraderGateway/"]
