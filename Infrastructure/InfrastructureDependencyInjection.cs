@@ -46,6 +46,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IOrderGatewayService, OrderGatewayService>();
         services.AddScoped<IOrderGrpcGatewayService, OrderGrpcGatewayService>();
         services.AddScoped<IWalletGatewayService, WalletGatewayService>();
+        services.AddSingleton<IMessageBusPublisher, RabbitMqMessageBusPublisher>();
         services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
         services.AddHostedService<OutboxPublisherBackgroundService>();
 
