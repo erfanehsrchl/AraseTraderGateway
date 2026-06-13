@@ -1,5 +1,6 @@
 using Application.Interfaces.V1;
 using Infrastructure.BackgroundJobs;
+using Infrastructure.Grpc;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
 using Infrastructure.Services.V1;
@@ -22,7 +23,9 @@ public static class InfrastructureDependencyInjection
             options.UseNpgsql(connectionString));
 
         services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
+        services.Configure<OrderServiceGrpcOptions>(configuration.GetSection("OrderService"));
         services.AddScoped<IOrderGatewayService, OrderGatewayService>();
+        services.AddScoped<IWalletGatewayService, WalletGatewayService>();
         services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
         services.AddHostedService<OutboxPublisherBackgroundService>();
 
